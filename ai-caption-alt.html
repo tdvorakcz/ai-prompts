@@ -87,24 +87,54 @@ Meta title:
 Meta description:</pre>
 
   <script>
-    // ✅ REQUIRED for Kontent
-    CustomElement.init(() => {
-      console.log("Custom element initialized");
+  // ✅ Initialize Kontent custom element
+  CustomElement.init(() => {
+    // ✅ Always set height so the element is visible
+    CustomElement.setHeight(document.body.scrollHeight);
+  });
 
-      // ✅ Auto-resize (very important in Kontent)
-      CustomElement.setHeight(document.body.scrollHeight);
-    });
+  function copyPrompt() {
+    const text = document.getElementById("prompt").innerText;
 
-    function copyPrompt() {
-      const text = document.getElementById("prompt").innerText;
-      navigator.clipboard.writeText(text);
-
-      // nicer feedback
-      const btn = document.querySelector("button");
-      btn.innerText = "Copied ✓";
-      setTimeout(() => btn.innerText = "Copy prompt", 1500);
+    try {
+      // ✅ Preferred modern API (may fail in iframe)
+      navigator.clipboard.writeText(text).then(() => {
+        showFeedback();
+      }).catch(() => {
+        fallbackCopy(text);
+      });
+    } catch {
+      fallbackCopy(text);
     }
-  </script>
+  }
+
+  function fallbackCopy(text) {
+    // ✅ Reliable fallback for iframe environments (Kontent)
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "absolute";
+    textarea.style.left = "-9999px";
+
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+
+    showFeedback();
+  }
+
+  function showFeedback() {
+    const button = document.querySelector("button");
+    const originalText = button.innerText;
+
+    button.innerText = "Copied ✓";
+
+    setTimeout(() => {
+      button.innerText = originalText;
+    }, 1500);
+  }
+</script>
 
 </body>
 </html>
